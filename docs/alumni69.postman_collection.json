@@ -1,0 +1,287 @@
+{
+  "info": {
+    "name": "alumni_69 API",
+    "description": "For real staff login import the private .env.postman.<role>.json environment. Defaults target npm run demo; customer demo tokens must be pasted from its terminal. No real passwords are stored in this collection.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "customerToken",
+      "value": ""
+    },
+    {
+      "key": "staffToken",
+      "value": ""
+    },
+    {
+      "key": "bookingId",
+      "value": ""
+    },
+    {
+      "key": "staffEmail",
+      "value": "staff@example.test"
+    },
+    {
+      "key": "staffPassword",
+      "value": "test-only-password"
+    },
+    {
+      "key": "staffUsername",
+      "value": "staff"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/health"
+      }
+    },
+    {
+      "name": "Table map",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/tables"
+      }
+    },
+    {
+      "name": "Reserved areas (VIP)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/reserved_areas"
+      }
+    },
+    {
+      "name": "Login staff",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/staff/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{staffEmail}}\",\n  \"password\": \"{{staffPassword}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Login successful', () => pm.response.to.have.status(200));",
+              "if (pm.response.code === 200) pm.collectionVariables.set('staffToken', pm.response.json().access_token);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Login staff with username",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/staff/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{staffUsername}}\",\n  \"password\": \"{{staffPassword}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Login successful', () => pm.response.to.have.status(200));",
+              "if (pm.response.code === 200) pm.collectionVariables.set('staffToken', pm.response.json().access_token);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customer profile",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/me"
+      }
+    },
+    {
+      "name": "Acknowledge LINE group",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/me/line/group-acknowledgement",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"acknowledged\": true}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Create booking (2 tables)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{$guid}}"
+          }
+        ],
+        "url": "{{baseUrl}}/bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"booker_name\": \"ผู้จองทดสอบ\", \"phone\": \"0812345678\", \"table_ids\": [\"A1\", \"A2\"]}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Created', () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) pm.collectionVariables.set('bookingId', pm.response.json().booking.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Upload slip (choose test/fixtures/slip.png)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/bookings/{{bookingId}}/slip",
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": ""
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Confirm payment",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{staffToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/bookings/{{bookingId}}/confirm"
+      }
+    },
+    {
+      "name": "Get tickets",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/bookings/{{bookingId}}/tickets"
+      }
+    },
+    {
+      "name": "Staff dashboard",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{staffToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/dashboard"
+      }
+    },
+    {
+      "name": "Booking summary (staff token required)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{staffToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/booking_summary"
+      }
+    }
+  ]
+}

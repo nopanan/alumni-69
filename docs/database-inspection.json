@@ -1,0 +1,969 @@
+{
+  "inspected_date": "2026-11-04",
+  "timezone": "Asia/Bangkok",
+  "schema": "alumni_69",
+  "scope": "Read-only metadata inspection; no booking, login, payment or ticket records included; no runtime mutation tests performed.",
+  "tables": [
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "customers",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "line_user_id",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "display_name",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "picture_url",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "full_name",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "phone",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "not_null": true
+        },
+        {
+          "name": "last_login_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "not_null": true
+        }
+      ],
+      "constraints": [
+        {
+          "name": "customers_line_user_id_key",
+          "definition": "UNIQUE (line_user_id)"
+        },
+        {
+          "name": "customers_pkey",
+          "definition": "PRIMARY KEY (id)"
+        }
+      ]
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "login_history",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "customer_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "logged_in_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "not_null": true
+        }
+      ],
+      "constraints": [
+        {
+          "name": "login_history_customer_id_fkey",
+          "definition": "FOREIGN KEY (customer_id) REFERENCES alumni_69.customers(id)"
+        },
+        {
+          "name": "login_history_pkey",
+          "definition": "PRIMARY KEY (id)"
+        }
+      ]
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "staff_accounts",
+      "columns": [
+        {
+          "name": "auth_user_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "role",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        }
+      ],
+      "constraints": [
+        {
+          "name": "staff_accounts_auth_user_id_fkey",
+          "definition": "FOREIGN KEY (auth_user_id) REFERENCES auth.users(id)"
+        },
+        {
+          "name": "staff_accounts_pkey",
+          "definition": "PRIMARY KEY (auth_user_id)"
+        },
+        {
+          "name": "staff_accounts_role_check",
+          "definition": "CHECK ((role = ANY (ARRAY['admin'::text, 'manager'::text, 'staff'::text])))"
+        }
+      ]
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "reserved_areas",
+      "columns": [
+        {
+          "name": "id",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "label",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "zone",
+          "type": "smallint",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "color",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        }
+      ],
+      "constraints": [
+        {
+          "name": "reserved_areas_pkey",
+          "definition": "PRIMARY KEY (id)"
+        }
+      ]
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "bookings",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "customer_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "booker_name",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "phone",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "default": "'pending_payment'::text",
+          "not_null": true
+        },
+        {
+          "name": "total_amount",
+          "type": "integer",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "not_null": true
+        },
+        {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "default": "(now() + '01:00:00'::interval)",
+          "not_null": true
+        },
+        {
+          "name": "confirmed_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "confirmed_by",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "bookings_booker_name_check",
+          "definition": "CHECK ((length(TRIM(BOTH FROM booker_name)) > 0))"
+        },
+        {
+          "name": "bookings_confirmed_by_fkey",
+          "definition": "FOREIGN KEY (confirmed_by) REFERENCES alumni_69.staff_accounts(auth_user_id)"
+        },
+        {
+          "name": "bookings_customer_id_fkey",
+          "definition": "FOREIGN KEY (customer_id) REFERENCES alumni_69.customers(id)"
+        },
+        {
+          "name": "bookings_phone_check",
+          "definition": "CHECK ((length(TRIM(BOTH FROM phone)) > 0))"
+        },
+        {
+          "name": "bookings_pkey",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "bookings_status_check",
+          "definition": "CHECK ((status = ANY (ARRAY['pending_payment'::text, 'pending_review'::text, 'confirmed'::text, 'expired'::text, 'cancelled'::text])))"
+        },
+        {
+          "name": "bookings_total_amount_check",
+          "definition": "CHECK ((total_amount > 0))"
+        }
+      ]
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "booking_items",
+      "columns": [
+        {
+          "name": "booking_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "table_id",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "unit_price",
+          "type": "integer",
+          "default": null,
+          "not_null": true
+        }
+      ],
+      "constraints": [
+        {
+          "name": "booking_items_booking_id_fkey",
+          "definition": "FOREIGN KEY (booking_id) REFERENCES alumni_69.bookings(id)"
+        },
+        {
+          "name": "booking_items_pkey",
+          "definition": "PRIMARY KEY (booking_id, table_id)"
+        },
+        {
+          "name": "booking_items_table_id_fkey",
+          "definition": "FOREIGN KEY (table_id) REFERENCES alumni_69.event_tables(id)"
+        },
+        {
+          "name": "booking_items_unit_price_check",
+          "definition": "CHECK ((unit_price = 3500))"
+        }
+      ]
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "event_tables",
+      "columns": [
+        {
+          "name": "id",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "zone",
+          "type": "smallint",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "column_label",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "table_number",
+          "type": "smallint",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "kind",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "price",
+          "type": "integer",
+          "default": "3500",
+          "not_null": true
+        },
+        {
+          "name": "seats",
+          "type": "smallint",
+          "default": "8",
+          "not_null": true
+        }
+      ],
+      "constraints": [
+        {
+          "name": "event_tables_kind_check",
+          "definition": "CHECK ((kind = ANY (ARRAY['regular'::text, 'staff'::text])))"
+        },
+        {
+          "name": "event_tables_pkey",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "event_tables_price_check",
+          "definition": "CHECK ((price = 3500))"
+        },
+        {
+          "name": "event_tables_seats_check",
+          "definition": "CHECK ((seats = 8))"
+        },
+        {
+          "name": "event_tables_zone_check",
+          "definition": "CHECK ((zone = ANY (ARRAY[1, 2])))"
+        }
+      ]
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "table_claims",
+      "columns": [
+        {
+          "name": "table_id",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "booking_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": true
+        }
+      ],
+      "constraints": [
+        {
+          "name": "table_claims_booking_id_fkey",
+          "definition": "FOREIGN KEY (booking_id) REFERENCES alumni_69.bookings(id)"
+        },
+        {
+          "name": "table_claims_pkey",
+          "definition": "PRIMARY KEY (table_id)"
+        },
+        {
+          "name": "table_claims_table_id_fkey",
+          "definition": "FOREIGN KEY (table_id) REFERENCES alumni_69.event_tables(id)"
+        }
+      ]
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "payments",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "booking_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "slip_path",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "submitted_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "not_null": true
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "default": "'pending'::text",
+          "not_null": true
+        },
+        {
+          "name": "reviewed_by",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "reviewed_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "rejection_reason",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "payments_booking_id_fkey",
+          "definition": "FOREIGN KEY (booking_id) REFERENCES alumni_69.bookings(id)"
+        },
+        {
+          "name": "payments_pkey",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "payments_reviewed_by_fkey",
+          "definition": "FOREIGN KEY (reviewed_by) REFERENCES alumni_69.staff_accounts(auth_user_id)"
+        },
+        {
+          "name": "payments_slip_path_check",
+          "definition": "CHECK ((length(TRIM(BOTH FROM slip_path)) > 0))"
+        },
+        {
+          "name": "payments_status_check",
+          "definition": "CHECK ((status = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text])))"
+        }
+      ]
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "tickets",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "booking_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "table_id",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "seat_number",
+          "type": "smallint",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "token",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "used_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "not_null": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "tickets_booking_id_table_id_fkey",
+          "definition": "FOREIGN KEY (booking_id, table_id) REFERENCES alumni_69.booking_items(booking_id, table_id)"
+        },
+        {
+          "name": "tickets_booking_id_table_id_seat_number_key",
+          "definition": "UNIQUE (booking_id, table_id, seat_number)"
+        },
+        {
+          "name": "tickets_pkey",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "tickets_seat_number_check",
+          "definition": "CHECK (((seat_number >= 1) AND (seat_number <= 8)))"
+        },
+        {
+          "name": "tickets_token_key",
+          "definition": "UNIQUE (token)"
+        }
+      ]
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "notification_outbox",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "booking_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "kind",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "default": "'pending'::text",
+          "not_null": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "not_null": true
+        }
+      ],
+      "constraints": [
+        {
+          "name": "notification_outbox_booking_id_fkey",
+          "definition": "FOREIGN KEY (booking_id) REFERENCES alumni_69.bookings(id)"
+        },
+        {
+          "name": "notification_outbox_booking_id_kind_key",
+          "definition": "UNIQUE (booking_id, kind)"
+        },
+        {
+          "name": "notification_outbox_pkey",
+          "definition": "PRIMARY KEY (id)"
+        }
+      ]
+    },
+    {
+      "rls": false,
+      "kind": "v",
+      "name": "table_status",
+      "columns": [
+        {
+          "name": "id",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "zone",
+          "type": "smallint",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "column_label",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "table_number",
+          "type": "smallint",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "kind",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "price",
+          "type": "integer",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "seats",
+          "type": "smallint",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "color",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        }
+      ],
+      "constraints": null
+    },
+    {
+      "rls": false,
+      "kind": "v",
+      "name": "booking_summary",
+      "columns": [
+        {
+          "name": "confirmed_tables",
+          "type": "bigint",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "pending_tables",
+          "type": "bigint",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "available_tables",
+          "type": "bigint",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "confirmed_amount",
+          "type": "bigint",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "pending_amount",
+          "type": "bigint",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "available_amount",
+          "type": "bigint",
+          "default": null,
+          "not_null": false
+        }
+      ],
+      "constraints": null
+    }
+  ],
+  "indexes": [
+    {
+      "indexdef": "CREATE UNIQUE INDEX customers_pkey ON alumni_69.customers USING btree (id)",
+      "indexname": "customers_pkey",
+      "tablename": "customers",
+      "schemaname": "alumni_69",
+      "tablespace": null
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX customers_line_user_id_key ON alumni_69.customers USING btree (line_user_id)",
+      "indexname": "customers_line_user_id_key",
+      "tablename": "customers",
+      "schemaname": "alumni_69",
+      "tablespace": null
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX login_history_pkey ON alumni_69.login_history USING btree (id)",
+      "indexname": "login_history_pkey",
+      "tablename": "login_history",
+      "schemaname": "alumni_69",
+      "tablespace": null
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX staff_accounts_pkey ON alumni_69.staff_accounts USING btree (auth_user_id)",
+      "indexname": "staff_accounts_pkey",
+      "tablename": "staff_accounts",
+      "schemaname": "alumni_69",
+      "tablespace": null
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX reserved_areas_pkey ON alumni_69.reserved_areas USING btree (id)",
+      "indexname": "reserved_areas_pkey",
+      "tablename": "reserved_areas",
+      "schemaname": "alumni_69",
+      "tablespace": null
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX bookings_pkey ON alumni_69.bookings USING btree (id)",
+      "indexname": "bookings_pkey",
+      "tablename": "bookings",
+      "schemaname": "alumni_69",
+      "tablespace": null
+    },
+    {
+      "indexdef": "CREATE INDEX bookings_customer_id_created_at_idx ON alumni_69.bookings USING btree (customer_id, created_at)",
+      "indexname": "bookings_customer_id_created_at_idx",
+      "tablename": "bookings",
+      "schemaname": "alumni_69",
+      "tablespace": null
+    },
+    {
+      "indexdef": "CREATE INDEX bookings_expires_at_idx ON alumni_69.bookings USING btree (expires_at) WHERE (status = 'pending_payment'::text)",
+      "indexname": "bookings_expires_at_idx",
+      "tablename": "bookings",
+      "schemaname": "alumni_69",
+      "tablespace": null
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX booking_items_pkey ON alumni_69.booking_items USING btree (booking_id, table_id)",
+      "indexname": "booking_items_pkey",
+      "tablename": "booking_items",
+      "schemaname": "alumni_69",
+      "tablespace": null
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX event_tables_pkey ON alumni_69.event_tables USING btree (id)",
+      "indexname": "event_tables_pkey",
+      "tablename": "event_tables",
+      "schemaname": "alumni_69",
+      "tablespace": null
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX table_claims_pkey ON alumni_69.table_claims USING btree (table_id)",
+      "indexname": "table_claims_pkey",
+      "tablename": "table_claims",
+      "schemaname": "alumni_69",
+      "tablespace": null
+    },
+    {
+      "indexdef": "CREATE INDEX table_claims_booking_id_idx ON alumni_69.table_claims USING btree (booking_id)",
+      "indexname": "table_claims_booking_id_idx",
+      "tablename": "table_claims",
+      "schemaname": "alumni_69",
+      "tablespace": null
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX payments_pkey ON alumni_69.payments USING btree (id)",
+      "indexname": "payments_pkey",
+      "tablename": "payments",
+      "schemaname": "alumni_69",
+      "tablespace": null
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX one_pending_payment ON alumni_69.payments USING btree (booking_id) WHERE (status = 'pending'::text)",
+      "indexname": "one_pending_payment",
+      "tablename": "payments",
+      "schemaname": "alumni_69",
+      "tablespace": null
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX tickets_pkey ON alumni_69.tickets USING btree (id)",
+      "indexname": "tickets_pkey",
+      "tablename": "tickets",
+      "schemaname": "alumni_69",
+      "tablespace": null
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX tickets_token_key ON alumni_69.tickets USING btree (token)",
+      "indexname": "tickets_token_key",
+      "tablename": "tickets",
+      "schemaname": "alumni_69",
+      "tablespace": null
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX tickets_booking_id_table_id_seat_number_key ON alumni_69.tickets USING btree (booking_id, table_id, seat_number)",
+      "indexname": "tickets_booking_id_table_id_seat_number_key",
+      "tablename": "tickets",
+      "schemaname": "alumni_69",
+      "tablespace": null
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX notification_outbox_pkey ON alumni_69.notification_outbox USING btree (id)",
+      "indexname": "notification_outbox_pkey",
+      "tablename": "notification_outbox",
+      "schemaname": "alumni_69",
+      "tablespace": null
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX notification_outbox_booking_id_kind_key ON alumni_69.notification_outbox USING btree (booking_id, kind)",
+      "indexname": "notification_outbox_booking_id_kind_key",
+      "tablename": "notification_outbox",
+      "schemaname": "alumni_69",
+      "tablespace": null
+    }
+  ],
+  "policies": [],
+  "triggers": [],
+  "functions": [
+    {
+      "acl": [
+        "postgres=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "name": "expire_bookings",
+      "definition": "CREATE OR REPLACE FUNCTION alumni_69.expire_bookings()\n RETURNS integer\n LANGUAGE plpgsql\n SET search_path TO ''\nAS $function$\nDECLARE n integer;\nBEGIN\n PERFORM pg_advisory_xact_lock(690035008::bigint);\n WITH expired AS (\n UPDATE alumni_69.bookings SET status='expired' WHERE status='pending_payment' AND expires_at<=clock_timestamp() RETURNING id\n ) DELETE FROM alumni_69.table_claims WHERE booking_id IN (SELECT id FROM expired);\n GET DIAGNOSTICS n=ROW_COUNT; RETURN n;\nEND $function$\n"
+    },
+    {
+      "acl": [
+        "postgres=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "name": "create_booking",
+      "definition": "CREATE OR REPLACE FUNCTION alumni_69.create_booking(p_customer uuid, p_name text, p_phone text, p_tables text[])\n RETURNS uuid\n LANGUAGE plpgsql\n SET search_path TO ''\nAS $function$\nDECLARE bid uuid; n integer;\nBEGIN\n PERFORM pg_advisory_xact_lock(690035008::bigint);\n PERFORM alumni_69.expire_bookings();\n n:=cardinality(p_tables);\n IF n IS NULL OR n=0 OR n<>(SELECT count(DISTINCT x) FROM unnest(p_tables) x) THEN RAISE EXCEPTION 'Select unique table IDs'; END IF;\n IF n<>(SELECT count(*) FROM alumni_69.event_tables WHERE id=ANY(p_tables) AND kind='regular') THEN RAISE EXCEPTION 'Invalid or unavailable table type'; END IF;\n IF EXISTS(SELECT 1 FROM alumni_69.table_claims WHERE table_id=ANY(p_tables)) THEN RAISE EXCEPTION 'Table already reserved' USING ERRCODE='23505'; END IF;\n INSERT INTO alumni_69.bookings(customer_id,booker_name,phone,total_amount,expires_at)\n VALUES(p_customer,p_name,p_phone,n*3500,clock_timestamp()+interval '1 hour') RETURNING id INTO bid;\n INSERT INTO alumni_69.booking_items SELECT bid,x,3500 FROM unnest(p_tables) x;\n INSERT INTO alumni_69.table_claims SELECT x,bid FROM unnest(p_tables) x;\n RETURN bid;\nEND $function$\n"
+    },
+    {
+      "acl": [
+        "postgres=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "name": "submit_slip",
+      "definition": "CREATE OR REPLACE FUNCTION alumni_69.submit_slip(p_customer uuid, p_booking uuid, p_slip_path text)\n RETURNS uuid\n LANGUAGE plpgsql\n SET search_path TO ''\nAS $function$\nDECLARE pid uuid;\nBEGIN\n PERFORM pg_advisory_xact_lock(690035008::bigint);\n PERFORM alumni_69.expire_bookings();\n UPDATE alumni_69.bookings SET status='pending_review' WHERE id=p_booking AND customer_id=p_customer AND status='pending_payment' AND expires_at>clock_timestamp();\n IF NOT FOUND THEN RAISE EXCEPTION 'Booking expired, not owned, or not awaiting payment'; END IF;\n INSERT INTO alumni_69.payments(booking_id,slip_path) VALUES(p_booking,p_slip_path) RETURNING id INTO pid;\n RETURN pid;\nEND $function$\n"
+    },
+    {
+      "acl": [
+        "postgres=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "name": "confirm_payment",
+      "definition": "CREATE OR REPLACE FUNCTION alumni_69.confirm_payment(p_booking uuid, p_actor uuid)\n RETURNS void\n LANGUAGE plpgsql\n SET search_path TO ''\nAS $function$\nBEGIN\n PERFORM pg_advisory_xact_lock(690035008::bigint);\n IF NOT EXISTS(SELECT 1 FROM alumni_69.staff_accounts WHERE auth_user_id=p_actor AND role IN ('admin','staff')) THEN RAISE EXCEPTION 'Reviewer not authorized'; END IF;\n IF EXISTS(SELECT 1 FROM alumni_69.bookings WHERE id=p_booking AND status='confirmed') THEN RETURN; END IF;\n IF NOT EXISTS(SELECT 1 FROM alumni_69.payments WHERE booking_id=p_booking AND status='pending') THEN RAISE EXCEPTION 'No pending slip'; END IF;\n UPDATE alumni_69.bookings SET status='confirmed',confirmed_at=clock_timestamp(),confirmed_by=p_actor WHERE id=p_booking AND status='pending_review';\n IF NOT FOUND THEN RAISE EXCEPTION 'Booking not awaiting review'; END IF;\n UPDATE alumni_69.payments SET status='approved',reviewed_by=p_actor,reviewed_at=clock_timestamp() WHERE booking_id=p_booking AND status='pending';\n INSERT INTO alumni_69.tickets(booking_id,table_id,seat_number) SELECT i.booking_id,i.table_id,n FROM alumni_69.booking_items i CROSS JOIN generate_series(1,8) n WHERE i.booking_id=p_booking;\n INSERT INTO alumni_69.notification_outbox(booking_id,kind) VALUES(p_booking,'tickets_ready') ON CONFLICT DO NOTHING;\nEND $function$\n"
+    },
+    {
+      "acl": [
+        "postgres=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "name": "record_login",
+      "definition": "CREATE OR REPLACE FUNCTION alumni_69.record_login(p_line_id text, p_display_name text, p_picture_url text DEFAULT NULL::text)\n RETURNS uuid\n LANGUAGE plpgsql\n SET search_path TO ''\nAS $function$\nDECLARE cid uuid;\nBEGIN\n INSERT INTO alumni_69.customers(line_user_id,display_name,picture_url) VALUES(p_line_id,p_display_name,p_picture_url)\n ON CONFLICT(line_user_id) DO UPDATE SET display_name=excluded.display_name,picture_url=excluded.picture_url,last_login_at=clock_timestamp() RETURNING id INTO cid;\n INSERT INTO alumni_69.login_history(customer_id) VALUES(cid); RETURN cid;\nEND $function$\n"
+    }
+  ],
+  "views": [
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "name": "table_status",
+      "options": [
+        "security_invoker=true"
+      ],
+      "definition": " SELECT t.id,\n    t.zone,\n    t.column_label,\n    t.table_number,\n    t.kind,\n    t.price,\n    t.seats,\n        CASE\n            WHEN t.kind = 'staff'::text THEN 'blocked'::text\n            WHEN b.status = 'confirmed'::text THEN 'confirmed'::text\n            WHEN b.status = 'pending_review'::text THEN 'pending_review'::text\n            WHEN b.status = 'pending_payment'::text AND b.expires_at > now() THEN 'pending_payment'::text\n            ELSE 'available'::text\n        END AS status,\n        CASE\n            WHEN t.kind = 'staff'::text THEN 'gray-black'::text\n            WHEN b.status = 'confirmed'::text THEN 'red'::text\n            WHEN b.status = 'pending_review'::text OR b.status = 'pending_payment'::text AND b.expires_at > now() THEN 'orange'::text\n            ELSE 'white'::text\n        END AS color\n   FROM alumni_69.event_tables t\n     LEFT JOIN alumni_69.table_claims c ON c.table_id = t.id\n     LEFT JOIN alumni_69.bookings b ON b.id = c.booking_id;"
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=r/postgres"
+      ],
+      "name": "booking_summary",
+      "options": [
+        "security_invoker=true"
+      ],
+      "definition": " SELECT count(*) FILTER (WHERE status = 'confirmed'::text) AS confirmed_tables,\n    count(*) FILTER (WHERE status = ANY (ARRAY['pending_payment'::text, 'pending_review'::text])) AS pending_tables,\n    count(*) FILTER (WHERE status = 'available'::text) AS available_tables,\n    count(*) FILTER (WHERE status = 'confirmed'::text) * 3500 AS confirmed_amount,\n    count(*) FILTER (WHERE status = ANY (ARRAY['pending_payment'::text, 'pending_review'::text])) * 3500 AS pending_amount,\n    count(*) FILTER (WHERE status = 'available'::text) * 3500 AS available_amount\n   FROM alumni_69.table_status\n  WHERE kind = 'regular'::text;"
+    }
+  ],
+  "schema_acl": [
+    "postgres=UC/postgres",
+    "service_role=U/postgres"
+  ],
+  "table_grantees": [
+    "postgres",
+    "service_role"
+  ],
+  "publication_tables": [],
+  "storage_buckets": [],
+  "extensions": [
+    "pg_net",
+    "pg_cron"
+  ],
+  "table_inventory": [
+    {
+      "kind": "staff",
+      "count": 14,
+      "max_price": 3500,
+      "max_seats": 8,
+      "min_price": 3500,
+      "min_seats": 8
+    },
+    {
+      "kind": "regular",
+      "count": 194,
+      "max_price": 3500,
+      "max_seats": 8,
+      "min_price": 3500,
+      "min_seats": 8
+    }
+  ],
+  "reserved_area_inventory": [
+    {
+      "id": "VIP",
+      "zone": 1,
+      "color": "blue-white",
+      "label": "VIP"
+    }
+  ],
+  "expiry_job": {
+    "name": "alumni_69_expire_bookings",
+    "schedule": "* * * * *",
+    "active": true
+  }
+}
